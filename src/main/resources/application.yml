@@ -1,0 +1,48 @@
+server:
+  # Nova porta de batalha: 9010
+  port: ${PORT:9010}
+
+spring:
+  application:
+    name: hero-service # Nome identificador no Eureka e Config Server
+
+  cloud:
+    config:
+      fail-fast: true # Se o Config Server estiver off, ele nem sobe (evita rodar sem as props de DB)
+      retry:
+        max-attempts: 6
+        initial-interval: 2000
+        max-interval: 10000
+        multiplier: 1.5
+
+  config:
+    import:
+      # Importa as configs centralizadas (como as credenciais do Postgres)
+      - optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+
+# EUREKA CLIENT (Para o Gateway e outras APIs te acharem)
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# OBSERVABILIDADE (O HUD do seu microserviço)
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: "${ZIPKIN_URL:http://localhost:9411/api/v2/spans}"
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.config: DEBUG
