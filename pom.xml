@@ -14,7 +14,7 @@
     <groupId>br.com.study</groupId>
     <artifactId>game-api</artifactId>
     <version>2026.0.1-SNAPSHOT</version>
-    <n>game-api</n>
+    <name>game-api</name>
     <description>Gerenciamento de personagens e inventário do RPG souls-like</description>
 
     <properties>
