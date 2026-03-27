@@ -1,4 +1,4 @@
-package br.com.study.heroservice.config;
+package br.com.study.gameapi.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -20,9 +20,9 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(new Info()
-                        .title("User API - Study Ecosystem")
+                        .title("Hero Service API - Study Ecosystem")
                         .version("2026.0.1")
-                        .description("Documentação do Microserviço de Usuários e Autenticação"))
+                        .description("Catálogo de Heróis e Gestão de Status de RPG"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,

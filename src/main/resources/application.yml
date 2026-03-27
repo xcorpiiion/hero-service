@@ -1,48 +1,61 @@
 server:
-  # Nova porta de batalha: 9010
-  port: ${PORT:9010}
+  port: ${PORT:8095}
 
 spring:
   application:
-    name: hero-service # Nome identificador no Eureka e Config Server
-
-  cloud:
-    config:
-      fail-fast: true # Se o Config Server estiver off, ele nem sobe (evita rodar sem as props de DB)
-      retry:
-        max-attempts: 6
-        initial-interval: 2000
-        max-interval: 10000
-        multiplier: 1.5
+    name: game-api
 
   config:
     import:
-      # Importa as configs centralizadas (como as credenciais do Postgres)
       - optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
 
-# EUREKA CLIENT (Para o Gateway e outras APIs te acharem)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/game-api
+    username: ${POSTGRES_ROOT_USER:postgres}
+    password: ${POSTGRES_ROOT_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true  # true em dev para ver as queries geradas
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
 eureka:
   client:
-    serviceUrl:
+    service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
 
-# OBSERVABILIDADE (O HUD do seu microserviço)
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
   tracing:
     sampling:
       probability: 1.0
   zipkin:
     tracing:
-      endpoint: "${ZIPKIN_URL:http://localhost:9411/api/v2/spans}"
-  endpoints:
-    web:
-      exposure:
-        include: '*'
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
+
+app:
+  auth:
+    token-secret: ${JWT_TOKEN_SECRET}
+    token-expiration-msec: 900000
+    refresh-token-expiration-msec: 604800000
 
 logging:
   level:
     root: INFO
-    org.springframework.cloud.config: DEBUG
+    br.com.study.gameapi: DEBUG  # logs detalhados só do nosso código

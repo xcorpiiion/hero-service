@@ -1,4 +1,4 @@
-name: CI - Validação de Projeto Spring Boot
+name: CI - game-api
 
 on:
   push:
@@ -11,38 +11,43 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      checks: write # Necessário para o Qodana anotar o código
+      checks: write
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Importante para o Qodana analisar o histórico
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven' # Cache turbina o tempo de build
+          cache: 'maven'
 
-      # --- ETAPA 1: COMPILAÇÃO E TESTES ---
+      # ── Etapa 1: Build e testes ───────────────────────────────────────────
       - name: Build and Test
         run: |
-          echo "::group::🔨 Compilando e Rodando Testes"
-          mvn clean verify
-          echo "::notice::Build e Testes finalizados com sucesso!"
+          echo "::group::Compilando e rodando testes"
+          mvn clean verify \
+            -Dspring.datasource.url=jdbc:h2:mem:testdb \
+            -Dspring.datasource.driver-class-name=org.h2.Driver \
+            -Dspring.jpa.database-platform=org.hibernate.dialect.H2Dialect \
+            -Dapp.auth.token-secret=chave-de-ci-com-pelo-menos-64-caracteres-para-passar-na-validacao \
+            -Deureka.client.enabled=false \
+            -Dspring.cloud.config.enabled=false
+          echo "::notice::Build e testes finalizados!"
           echo "::endgroup::"
 
-      # --- ETAPA 2: QUALITY GATE (O SEU FILTRO) ---
-      - name: 'Qodana Scan'
+      # ── Etapa 2: Análise de qualidade ─────────────────────────────────────
+      - name: Qodana Scan
         uses: JetBrains/qodana-action@v2025.3
         with:
           args: --image,jetbrains/qodana-jvm:latest
-
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_649500073 }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
 
-      # --- ETAPA 3: NOTIFICAÇÃO (OPCIONAL) ---
+      # ── Etapa 3: Status ───────────────────────────────────────────────────
       - name: Status do Build
         if: success()
-        run: echo "::notice::O código está 100% aprovado para rodar local!"
+        run: echo "::notice::game-api aprovada e pronta!"
