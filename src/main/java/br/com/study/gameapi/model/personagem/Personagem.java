@@ -2,7 +2,7 @@ package br.com.study.gameapi.model.personagem;
 
 import br.com.study.gameapi.model.enums.ClassePersonagemType;
 import br.com.study.gameapi.model.inventario.ItemInventario;
-import br.com.study.genericcrud.model.AbstractId;
+import br.com.study.gameapi.model.memoria.Memoria;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,17 +13,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Representa o herói do jogador.
+ * Representa o agente do jogador dentro do Simulacro do Vazio.
  * <p>
- * Um jogador pode ter múltiplos personagens (runs diferentes).
- * O userId vem do JWT via header X-User-Id — não é uma FK para outra tabela
- * porque o usuário vive na user-api, não aqui.
+ * Mecânicas especiais:
+ * - bitsConsciencia: recurso principal, substitui almas
+ * - memorias: queimadas em críticos, narradas pelo System Architect
+ * - hollow: true = personagem virou NPC inimigo, run encerrada
  */
 @Getter
 @Setter
 @Entity
 @Table(name = "personagem")
-public class Personagem extends AbstractId<Long> {
+public class Personagem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,71 +39,64 @@ public class Personagem extends AbstractId<Long> {
     @Column(nullable = false)
     private ClassePersonagemType classe;
 
-    /**
-     * Dono do personagem — vem do JWT, não é FK
-     */
     @Column(nullable = false)
     private Long usuarioId;
 
-    // ─── Atributos vitais ─────────────────────────────────
+    // ─── Vitais ───────────────────────────────────────────
     @Column(nullable = false)
     private int hpMaximo;
-
     @Column(nullable = false)
     private int hpAtual;
-
     @Column(nullable = false)
     private int mpMaximo;
-
     @Column(nullable = false)
     private int mpAtual;
-
-    /**
-     * Action Points disponíveis por turno
-     */
     @Column(nullable = false)
     private int apMaximo;
 
-    // ─── Atributos de combate ──────────────────────────────
+    // ─── Combate ──────────────────────────────────────────
     @Column(nullable = false)
     private int ataque;
-
     @Column(nullable = false)
     private int defesa;
-
     @Column(nullable = false)
     private int velocidade;
-
-    /**
-     * Afeta chance de crítico e outros efeitos aleatórios
-     */
     @Column(nullable = false)
     private int sorte;
 
     // ─── Progressão ───────────────────────────────────────
     @Column(nullable = false)
     private int nivel = 1;
-
     @Column(nullable = false)
     private long experiencia = 0;
 
     /**
-     * Almas acumuladas — perdidas na morte, recuperáveis
+     * Bits de Consciência — substitui almas no Simulacro do Vazio.
+     * Perdidos na morte, recuperáveis via SoulDrop no servidor.
      */
     @Column(nullable = false)
-    private long almas = 0;
+    private long bitsConsciencia = 0;
 
-    // ─── Inventário ───────────────────────────────────────
+    /**
+     * Hollow Digital — personagem morreu sem Bits de Consciência.
+     * Mente virou código NPC. Não pode iniciar novas sessões.
+     */
+    @Column(nullable = false)
+    private boolean hollow = false;
+
+    /**
+     * Memórias — queimadas ao executar críticos.
+     * Sem memórias disponíveis = críticos impossíveis.
+     */
+    @OneToMany(mappedBy = "personagem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Memoria> memorias = new ArrayList<>();
+
     @OneToMany(mappedBy = "personagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemInventario> inventario = new ArrayList<>();
 
-    /**
-     * Limite de slots do inventário
-     */
     @Column(nullable = false)
     private int limiteInventario = 20;
 
-    // ─── Estado ───────────────────────────────────────────
     @Column(nullable = false)
     private boolean vivo = true;
 
@@ -125,11 +119,38 @@ public class Personagem extends AbstractId<Long> {
         this.mpAtual = Math.min(this.mpMaximo, this.mpAtual + quantidade);
     }
 
+    public List<Memoria> memoriasDisponiveis() {
+        return memorias.stream().filter(m -> !m.isQueimada()).toList();
+    }
+
+    public boolean podeExecutarCritico() {
+        return !memoriasDisponiveis().isEmpty();
+    }
+
+    /**
+     * Queima a primeira memória disponível e a retorna pro Gemini narrar
+     */
+    public Memoria queimarMemoria() {
+        return memoriasDisponiveis().stream()
+                .findFirst()
+                .map(m -> {
+                    m.setQueimada(true);
+                    return m;
+                })
+                .orElseThrow(() -> new IllegalStateException("Sem memórias disponíveis"));
+    }
+
+    /**
+     * Morte sem Bits — queima tudo e vira Hollow
+     */
+    public void tornarHollow() {
+        this.hollow = true;
+        this.vivo = false;
+        memorias.forEach(m -> m.setQueimada(true));
+    }
+
     public boolean inventarioCheio() {
-        int slotsUsados = inventario.stream()
-                .mapToInt(ItemInventario::getQuantidade)
-                .sum();
-        return slotsUsados >= limiteInventario;
+        return inventario.stream().mapToInt(ItemInventario::getQuantidade).sum() >= limiteInventario;
     }
 
     @Override
