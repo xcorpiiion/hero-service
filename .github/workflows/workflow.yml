@@ -2,9 +2,9 @@ name: CI - game-api
 
 on:
   push:
-    branches: [ "main", "dev", "master" ]
+    branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "master" ]
 
 jobs:
   pipeline-qualidade:
@@ -27,9 +27,12 @@ jobs:
 
       # ── Etapa 1: Build e testes ───────────────────────────────────────────
       - name: Build and Test
+        env:
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         run: |
           echo "::group::Compilando e rodando testes"
           mvn clean verify \
+            --settings .github/workflows/settings.xml \
             -Dspring.datasource.url=jdbc:h2:mem:testdb \
             -Dspring.datasource.driver-class-name=org.h2.Driver \
             -Dspring.jpa.database-platform=org.hibernate.dialect.H2Dialect \
@@ -45,7 +48,7 @@ jobs:
         with:
           args: --image,jetbrains/qodana-jvm:latest
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_140741660 }}
 
       # ── Etapa 3: Status ───────────────────────────────────────────────────
       - name: Status do Build
