@@ -12,7 +12,7 @@ jobs:
     permissions:
       contents: read
       checks: write
-      packages: read  # ADICIONADO: permissão explícita para ler GitHub Packages
+      packages: read
 
     steps:
       - uses: actions/checkout@v4
@@ -26,21 +26,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # ── Debug: verifica se o token consegue acessar os pacotes ───────────
-      - name: Verificar acesso ao GitHub Packages
-        env:
-          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-        run: |
-          echo "Testando acesso ao generic-authorization..."
-          curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer $PACKAGES_TOKEN" \
-            https://maven.pkg.github.com/xcorpiiion/generic-authorization/br/com/study/generic-authorization/maven-metadata.xml
-
       # ── Etapa 1: Build e testes ───────────────────────────────────────────
       - name: Build and Test
         env:
+          GITHUB_ACTOR: ${{ secrets.ACTOR }}
           GITHUB_PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
         run: |
           echo "::group::Compilando e rodando testes"
           mvn clean verify \
