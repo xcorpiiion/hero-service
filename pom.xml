@@ -14,7 +14,7 @@
     <groupId>br.com.study</groupId>
     <artifactId>game-api</artifactId>
     <version>2026.0.1-SNAPSHOT</version>
-    <name>game-api</name>
+    <n>game-api</n>
     <description>Gerenciamento de personagens e inventário do RPG souls-like</description>
 
     <properties>
@@ -22,6 +22,7 @@
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
 
+    <!-- Repositórios privados — credenciais via settings.xml (server id deve bater) -->
     <repositories>
         <repository>
             <id>github-authorization</id>
@@ -55,7 +56,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Segurança — JWT via generic-authorization -->
+        <!-- Segurança -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -92,7 +93,7 @@
             <artifactId>zipkin-reporter-brave</artifactId>
         </dependency>
 
-        <!-- Libs internas do ecossistema -->
+        <!-- Libs internas -->
         <dependency>
             <groupId>br.com.study</groupId>
             <artifactId>generic-authorization</artifactId>
@@ -129,7 +130,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- H2 — banco em memória para testes no CI (sem precisar de Postgres real) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -139,23 +139,6 @@
     </dependencies>
 
     <dependencyManagement>
-        <repositories>
-            <repository>
-                <id>github-authorization</id>
-                <url>https://maven.pkg.github.com/xcorpiiion/generic-authorization</url>
-                <snapshots>
-                    <enabled>true</enabled>
-                </snapshots>
-            </repository>
-            <repository>
-                <id>github-crud</id>
-                <url>https://maven.pkg.github.com/xcorpiiion/generic-crud</url>
-                <snapshots>
-                    <enabled>true</enabled>
-                </snapshots>
-            </repository>
-        </repositories>
-
         <dependencies>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
