@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +31,8 @@ class PersonagemServiceImplTest {
 
     @Mock
     PersonagemRepository repositorio;
-    @InjectMocks PersonagemServiceImpl service;
+    @InjectMocks
+    PersonagemServiceImpl service;
 
     private static final Long USUARIO_ID = 1L;
 
@@ -40,7 +42,7 @@ class PersonagemServiceImplTest {
     void setUp() {
         personagemBase = new Personagem();
         personagemBase.setId(1L);
-        personagemBase.setNome("Solaire");
+        personagemBase.setNome("Nexus-7");
         personagemBase.setClasse(ClassePersonagemType.GUERREIRO);
         personagemBase.setUsuarioId(USUARIO_ID);
         personagemBase.setHpMaximo(150);
@@ -52,7 +54,11 @@ class PersonagemServiceImplTest {
         personagemBase.setDefesa(12);
         personagemBase.setVelocidade(8);
         personagemBase.setSorte(5);
+        personagemBase.setBitsConsciencia(0L);
+        personagemBase.setHollow(false);
         personagemBase.setVivo(true);
+        personagemBase.setMemorias(new ArrayList<>());
+        personagemBase.setInventario(new ArrayList<>());
     }
 
     // ─────────────────────────────────────────────
@@ -65,8 +71,8 @@ class PersonagemServiceImplTest {
         @Test
         @DisplayName("cria personagem com atributos base da classe")
         void classeGuerreiro_aplicaAtributosBase() {
-            var request = new PersonagemRequest.CriarPersonagem("Solaire", ClassePersonagemType.GUERREIRO);
-            when(repositorio.existsByNomeAndUsuarioId("Solaire", USUARIO_ID)).thenReturn(false);
+            var request = new PersonagemRequest.CriarPersonagem("Nexus-7", ClassePersonagemType.GUERREIRO);
+            when(repositorio.existsByNomeAndUsuarioId("Nexus-7", USUARIO_ID)).thenReturn(false);
             when(repositorio.save(any())).thenReturn(personagemBase);
 
             PersonagemResponse.Detalhes response = service.criar(request, USUARIO_ID);
@@ -79,54 +85,28 @@ class PersonagemServiceImplTest {
         }
 
         @Test
-        @DisplayName("lança DataIntegrityException quando nome já existe para o usuário")
-        void nomeDuplicado_lancaExcecao() {
-            var request = new PersonagemRequest.CriarPersonagem("Solaire", ClassePersonagemType.GUERREIRO);
-            when(repositorio.existsByNomeAndUsuarioId("Solaire", USUARIO_ID)).thenReturn(true);
-
-            assertThatThrownBy(() -> service.criar(request, USUARIO_ID))
-                    .isInstanceOf(DataIntegrityException.class)
-                    .hasMessageContaining("Solaire");
-
-            verify(repositorio, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("personagem começa no nível 1 com 0 almas e 0 experiência")
-        void novoPersonagem_estadoInicial() {
-            var request = new PersonagemRequest.CriarPersonagem("Artorias", ClassePersonagemType.ASSASSINO);
-
-            Personagem assassino = new Personagem();
-            assassino.setId(2L);
-            assassino.setNome("Artorias");
-            assassino.setClasse(ClassePersonagemType.ASSASSINO);
-            assassino.setUsuarioId(USUARIO_ID);
-            assassino.setHpMaximo(ClassePersonagemType.ASSASSINO.getHpBase());
-            assassino.setHpAtual(ClassePersonagemType.ASSASSINO.getHpBase());
-            assassino.setMpMaximo(ClassePersonagemType.ASSASSINO.getMpBase());
-            assassino.setMpAtual(ClassePersonagemType.ASSASSINO.getMpBase());
-            assassino.setApMaximo(ClassePersonagemType.ASSASSINO.getApBase());
-            assassino.setAtaque(ClassePersonagemType.ASSASSINO.getAtqBase());
-            assassino.setDefesa(ClassePersonagemType.ASSASSINO.getDefBase());
-            assassino.setVelocidade(ClassePersonagemType.ASSASSINO.getVelocidadeBase());
-            assassino.setSorte(ClassePersonagemType.ASSASSINO.getSorteBase());
-            assassino.setVivo(true);
-
-            when(repositorio.existsByNomeAndUsuarioId("Artorias", USUARIO_ID)).thenReturn(false);
-            when(repositorio.save(any())).thenReturn(assassino);
+        @DisplayName("personagem começa com Bits de Consciência zerados e não hollow")
+        void novoPersonagem_estadoInicialSimulacro() {
+            var request = new PersonagemRequest.CriarPersonagem("Nexus-7", ClassePersonagemType.ASSASSINO);
+            when(repositorio.existsByNomeAndUsuarioId(any(), any())).thenReturn(false);
+            when(repositorio.save(any())).thenAnswer(inv -> {
+                Personagem p = inv.getArgument(0);
+                p.setId(2L);
+                return p;
+            });
 
             PersonagemResponse.Detalhes response = service.criar(request, USUARIO_ID);
 
             assertThat(response.nivel()).isEqualTo(1);
-            assertThat(response.almas()).isZero();
-            assertThat(response.experiencia()).isZero();
+            assertThat(response.bitsConsciencia()).isZero();
+            assertThat(response.hollow()).isFalse();
             assertThat(response.vivo()).isTrue();
         }
 
         @Test
         @DisplayName("personagem começa com HP atual igual ao HP máximo")
         void novoPersonagem_hpAtualIgualHpMaximo() {
-            var request = new PersonagemRequest.CriarPersonagem("Solaire", ClassePersonagemType.MAGO);
+            var request = new PersonagemRequest.CriarPersonagem("Nexus-7", ClassePersonagemType.MAGO);
             when(repositorio.existsByNomeAndUsuarioId(any(), any())).thenReturn(false);
             when(repositorio.save(any())).thenAnswer(inv -> {
                 Personagem p = inv.getArgument(0);
@@ -138,6 +118,19 @@ class PersonagemServiceImplTest {
 
             assertThat(response.hpAtual()).isEqualTo(response.hpMaximo());
             assertThat(response.mpAtual()).isEqualTo(response.mpMaximo());
+        }
+
+        @Test
+        @DisplayName("lança DataIntegrityException quando nome já existe para o usuário")
+        void nomeDuplicado_lancaExcecao() {
+            var request = new PersonagemRequest.CriarPersonagem("Nexus-7", ClassePersonagemType.GUERREIRO);
+            when(repositorio.existsByNomeAndUsuarioId("Nexus-7", USUARIO_ID)).thenReturn(true);
+
+            assertThatThrownBy(() -> service.criar(request, USUARIO_ID))
+                    .isInstanceOf(DataIntegrityException.class)
+                    .hasMessageContaining("Nexus-7");
+
+            verify(repositorio, never()).save(any());
         }
     }
 
@@ -156,8 +149,9 @@ class PersonagemServiceImplTest {
             List<PersonagemResponse.Resumo> resultado = service.listarPorUsuario(USUARIO_ID);
 
             assertThat(resultado).hasSize(1);
-            assertThat(resultado.getFirst().nome()).isEqualTo("Solaire");
-            assertThat(resultado.getFirst().classe()).isEqualTo(ClassePersonagemType.GUERREIRO);
+            assertThat(resultado.getFirst().nome()).isEqualTo("Nexus-7");
+            assertThat(resultado.getFirst().hollow()).isFalse();
+            assertThat(resultado.getFirst().bitsConsciencia()).isZero();
         }
 
         @Test
@@ -187,7 +181,8 @@ class PersonagemServiceImplTest {
             PersonagemResponse.Detalhes resultado = service.buscarPorId(1L, USUARIO_ID);
 
             assertThat(resultado.id()).isEqualTo(1L);
-            assertThat(resultado.nome()).isEqualTo("Solaire");
+            assertThat(resultado.nome()).isEqualTo("Nexus-7");
+            assertThat(resultado.hollow()).isFalse();
         }
 
         @Test

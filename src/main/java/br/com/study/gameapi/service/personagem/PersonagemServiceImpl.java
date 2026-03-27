@@ -25,13 +25,10 @@ public class PersonagemServiceImpl implements PersonagemService {
 
     @Transactional
     @Override
-    public PersonagemResponse.Detalhes criar(
-            PersonagemRequest.CriarPersonagem request,
-            Long usuarioId
-    ) {
+    public PersonagemResponse.Detalhes criar(PersonagemRequest.CriarPersonagem request, Long usuarioId) {
         if (repositorio.existsByNomeAndUsuarioId(request.nome(), usuarioId)) {
             throw new DataIntegrityException(
-                    "Você já tem um personagem com o nome '%s'.".formatted(request.nome())
+                    "Você já tem um agente com o nome '%s'.".formatted(request.nome())
             );
         }
 
@@ -43,8 +40,7 @@ public class PersonagemServiceImpl implements PersonagemService {
         aplicarAtributosBase(personagem, request.classe());
 
         repositorio.save(personagem);
-        log.info("Personagem criado: {} ({}) para usuário {}",
-                personagem.getNome(), personagem.getClasse(), usuarioId);
+        log.info("Agente criado: {} ({}) para usuário {}", personagem.getNome(), personagem.getClasse(), usuarioId);
 
         return toDetalhes(personagem);
     }
@@ -63,7 +59,7 @@ public class PersonagemServiceImpl implements PersonagemService {
         return repositorio.findByIdAndUsuarioId(id, usuarioId)
                 .map(this::toDetalhes)
                 .orElseThrow(() -> new ObjectNotFoundException(
-                        "Personagem não encontrado com id: " + id
+                        "Agente não encontrado com id: " + id
                 ));
     }
 
@@ -71,10 +67,6 @@ public class PersonagemServiceImpl implements PersonagemService {
     // Helpers
     // ─────────────────────────────────────────────
 
-    /**
-     * Aplica os atributos base da classe ao personagem recém-criado.
-     * Os valores do enum são os atributos no nível 1.
-     */
     private void aplicarAtributosBase(Personagem personagem, ClassePersonagemType classe) {
         personagem.setHpMaximo(classe.getHpBase());
         personagem.setHpAtual(classe.getHpBase());
@@ -95,8 +87,9 @@ public class PersonagemServiceImpl implements PersonagemService {
                 p.getNivel(),
                 p.getHpAtual(),
                 p.getHpMaximo(),
-                p.getAlmas(),
-                p.isVivo()
+                p.getBitsConsciencia(),
+                p.isVivo(),
+                p.isHollow()
         );
     }
 
@@ -115,13 +108,17 @@ public class PersonagemServiceImpl implements PersonagemService {
                 ))
                 .toList();
 
+        int memoriasDisponiveis = (int) p.getMemorias().stream()
+                .filter(m -> !m.isQueimada())
+                .count();
+
         return new PersonagemResponse.Detalhes(
                 p.getId(),
                 p.getNome(),
                 p.getClasse(),
                 p.getNivel(),
                 p.getExperiencia(),
-                p.getAlmas(),
+                p.getBitsConsciencia(),
                 p.getHpAtual(),
                 p.getHpMaximo(),
                 p.getMpAtual(),
@@ -131,6 +128,9 @@ public class PersonagemServiceImpl implements PersonagemService {
                 p.getDefesa(),
                 p.getVelocidade(),
                 p.getSorte(),
+                p.isHollow(),
+                memoriasDisponiveis,
+                p.getMemorias().size(),
                 slotsUsados,
                 p.getLimiteInventario(),
                 inventario,
