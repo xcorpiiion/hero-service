@@ -22,18 +22,14 @@
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
 
-    <!-- Repositórios privados — credenciais via settings.xml (server id deve bater) -->
+    <!--
+        GitHub Packages — um único repositório por owner resolve todos os pacotes.
+        O Maven busca qualquer pacote publicado pelo owner xcorpiiion aqui.
+    -->
     <repositories>
         <repository>
-            <id>github-authorization</id>
-            <url>https://maven.pkg.github.com/xcorpiiion/generic-authorization</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>github-crud</id>
-            <url>https://maven.pkg.github.com/xcorpiiion/generic-crud</url>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/xcorpiiion/*</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
