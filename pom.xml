@@ -29,10 +29,13 @@
     <repositories>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/xcorpiiion/*</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <name>GitHub xcorpiiion Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/xcorpiiion/generic-crud</url>
+        </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub xcorpiiion Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/xcorpiiion/generic-authorization</url>
         </repository>
     </repositories>
 
