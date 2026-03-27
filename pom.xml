@@ -22,20 +22,13 @@
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
 
-    <!--
-        GitHub Packages — um único repositório por owner resolve todos os pacotes.
-        O Maven busca qualquer pacote publicado pelo owner xcorpiiion aqui.
-    -->
     <repositories>
         <repository>
             <id>github</id>
-            <name>GitHub xcorpiiion Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/xcorpiiion/generic-crud</url>
-        </repository>
-        <repository>
-            <id>github</id>
-            <name>GitHub xcorpiiion Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/xcorpiiion/generic-authorization</url>
+            <url>https://maven.pkg.github.com/xcorpiiion/*</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
