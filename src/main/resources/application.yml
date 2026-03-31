@@ -2,6 +2,22 @@ server:
   port: ${PORT:8095}
 
 spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          registry-api:
+            url: ${FEIGN_BASE_URL}/registry-api
+          user-api:
+            url: ${FEIGN_BASE_URL}/user-api
+          game-api:
+            url: ${FEIGN_BASE_URL}/game-api
+          combat-api:
+            url: ${FEIGN_BASE_URL}/combat-api
+          narrative-api:
+            url: ${FEIGN_BASE_URL}/narrative-api
+          authorization-api:
+            url: ${FEIGN_BASE_URL}/authorization-api
   application:
     name: game-api
 
